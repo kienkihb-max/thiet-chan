@@ -136,6 +136,7 @@
     <div class="card">
       <h2>Tóm tắt</h2>
       <dl class="sum" id="summary"></dl>
+      <p class="muted" style="font-size:12px;margin:12px 0 0">AI hiện chỉ nhận ra một số đặc điểm bất thường, chưa đánh giá được lưỡi bình thường. Màu và hình thể lưỡi sẽ được bác sĩ xem trực tiếp trên ảnh.</p>
     </div>
 
     <div class="card" id="detailCard">
@@ -363,8 +364,9 @@ if (typeof window !== 'undefined') {
     $('quality').textContent = quality.length ? 'Lưu ý về ảnh: ' + quality.join(', ') + '. Kết quả có thể kém chính xác, nên chụp lại nếu được.' : '';
     $('summary').innerHTML = Object.entries(GROUP).map(([g, label]) => {
       const fs = findings.filter(f => f.group === g);
+      const checked = Object.values(FEATURES).filter(f => f.group === g).map(f => f.name.toLowerCase());
       return `<dt>${label}</dt><dd>${fs.length ? fs.map(f => `<span class="chip ${g}">${f.name} <small>· ${f.level}</small></span>`).join('')
-        : '<span class="none">AI không đưa ra nhận định</span>'}</dd>`;
+        : `<span class="none">Không thấy ${checked.join(g === 'reu' ? ', ' : ' hay ')} rõ rệt</span>`}</dd>`;
     }).join('');
     $('detailCard').hidden = !findings.length;
     $('details').innerHTML = findings.map(f => `
