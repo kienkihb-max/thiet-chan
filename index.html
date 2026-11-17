@@ -58,6 +58,7 @@
   .chip small{opacity:.8;font-size:12px}
   .chip.chat{background:var(--chat-50);color:var(--chat)} .chip.hinh{background:var(--hinh-50);color:var(--hinh)} .chip.reu{background:var(--reu-50);color:var(--reu)}
   .none{color:var(--faint);font-size:14px}
+  .chip.normal{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
   .feat{border-left:4px solid var(--line);padding:2px 0 2px 12px;margin:14px 0}
   .feat.chat{border-color:var(--chat)} .feat.hinh{border-color:var(--hinh)} .feat.reu{border-color:var(--reu)}
   .feat h3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:16px;margin:0 0 4px}
@@ -136,7 +137,7 @@
     <div class="card">
       <h2>Tóm tắt</h2>
       <dl class="sum" id="summary"></dl>
-      <p class="muted" style="font-size:12px;margin:12px 0 0">AI hiện chỉ nhận ra một số đặc điểm bất thường, chưa đánh giá được lưỡi bình thường. Màu và hình thể lưỡi sẽ được bác sĩ xem trực tiếp trên ảnh.</p>
+      <p class="muted" style="font-size:12px;margin:12px 0 0">“Không thấy bất thường” nghĩa là AI không phát hiện dấu hiệu nào trong số những đặc điểm nó nhận biết được. Bác sĩ sẽ xác nhận lại trên ảnh.</p>
     </div>
 
     <div class="card" id="detailCard">
@@ -189,6 +190,8 @@ const CONFIG = {
 // ===== CORE-START (các hàm thuần, kiểm thử được ngoài trình duyệt) =====
 const SIZE = 640, FLOOR = 0.20, IOU = 0.45, NO_TONGUE = 0.25;
 const GROUP = { chat: 'Chất lưỡi', hinh: 'Hình thể', reu: 'Rêu lưỡi' };
+// Mô tả khi AI không thấy dấu hiệu bất thường nào trong nhóm (bác sĩ có thể sửa câu chữ ở đây)
+const NORMAL = { chat: 'Lưỡi hồng', hinh: 'Hình thể cân đối', reu: 'Rêu bình thường' };
 
 // Đặc điểm được hiển thị. lo/hi: ngưỡng "có thể"/"rõ".
 // tier A: AP50 trên tập kiểm tra ≥ 0,6. tier B: 0,3–0,6, kèm lưu ý AI còn hay nhầm.
@@ -268,10 +271,12 @@ function buildReport(findings, quality, patient, when, version) {
   L.push('Thời gian: ' + when);
   L.push('Chất lượng ảnh: ' + (quality.length ? quality.join('; ') : 'đạt'));
   L.push('');
-  L.push('Đặc điểm AI nhận thấy:');
-  if (findings.length) findings.forEach(f =>
-    L.push(`- ${f.name}: ${f.level} (điểm ${f.score.toFixed(2).replace('.', ',')})${f.tier === 'B' ? ' – AI còn hay nhầm' : ''}`));
-  else L.push('- Không có đặc điểm nào đủ rõ để nhận định');
+  L.push('AI mô tả:');
+  Object.entries(GROUP).forEach(([g, label]) => {
+    const fs = findings.filter(f => f.group === g);
+    if (!fs.length) L.push(`- ${label}: ${NORMAL[g]} (không thấy dấu hiệu bất thường)`);
+    else fs.forEach(f => L.push(`- ${label}: ${f.name} – ${f.level} (điểm ${f.score.toFixed(2).replace('.', ',')})${f.tier === 'B' ? ', AI còn hay nhầm' : ''}`));
+  });
   L.push('AI không đánh giá: ' + WEAK.join(', ').toLowerCase());
   if (patient.note) { L.push(''); L.push('Câu hỏi của người bệnh: ' + patient.note); }
   L.push('');
@@ -364,9 +369,8 @@ if (typeof window !== 'undefined') {
     $('quality').textContent = quality.length ? 'Lưu ý về ảnh: ' + quality.join(', ') + '. Kết quả có thể kém chính xác, nên chụp lại nếu được.' : '';
     $('summary').innerHTML = Object.entries(GROUP).map(([g, label]) => {
       const fs = findings.filter(f => f.group === g);
-      const checked = Object.values(FEATURES).filter(f => f.group === g).map(f => f.name.toLowerCase());
       return `<dt>${label}</dt><dd>${fs.length ? fs.map(f => `<span class="chip ${g}">${f.name} <small>· ${f.level}</small></span>`).join('')
-        : `<span class="none">Không thấy ${checked.join(g === 'reu' ? ', ' : ' hay ')} rõ rệt</span>`}</dd>`;
+        : `<span class="chip normal">${NORMAL[g]}</span> <span class="none" style="font-size:12px;white-space:nowrap">không thấy bất thường</span>`}</dd>`;
     }).join('');
     $('detailCard').hidden = !findings.length;
     $('details').innerHTML = findings.map(f => `
