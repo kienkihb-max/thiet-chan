@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6e56">
+<title>Thiệt chẩn AI – Mô tả hình ảnh lưỡi</title>
+<meta name="description" content="Chụp ảnh lưỡi, AI mô tả đặc điểm bằng tiếng Việt ngay trên máy của bạn, gửi bác sĩ xác nhận.">
+<style>
+  :root{
+    --ink:#17202e; --muted:#5d6676; --faint:#8a93a3; --line:#e2e5eb; --bg:#f5f6f8; --card:#fff;
+    --brand:#0f6e56; --brand-50:#e3f3ed; --brand-700:#0a5442;
+    --warn:#8a5a00; --warn-50:#fff5e1; --warn-line:#f0d59b;
+    --chat:#c4472a; --chat-50:#fbebe6; --hinh:#5b52c4; --hinh-50:#eeedfd; --reu:#1a8a68; --reu-50:#e3f4ee;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+  main{max-width:560px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px}
+  .logo i{width:32px;height:32px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
+  .pill{font-size:12px;color:var(--warn);background:var(--warn-50);border:1px solid var(--warn-line);padding:2px 10px;border-radius:99px;white-space:nowrap}
+  h1{font-size:24px;line-height:1.3;margin:6px 0 6px}
+  h2{font-size:17px;margin:0 0 10px}
+  p{margin:0 0 10px}
+  .lead{color:var(--muted);margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0}
+  .steps{display:flex;gap:6px;margin:0 0 6px;font-size:12px;color:var(--faint)}
+  .steps span{flex:1;padding-top:6px;border-top:3px solid var(--line)}
+  .steps span.on{color:var(--brand);border-color:var(--brand);font-weight:600}
+  .tips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+  .tip{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted)}
+  .tip svg{flex:none;width:30px;height:30px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:14px 16px;font:inherit;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
+  .btn.primary{background:var(--brand);color:#fff}
+  .btn.primary:active{background:var(--brand-700)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+  .btn.plain{background:transparent;color:var(--muted);font-weight:500;font-size:15px}
+  .btn input{display:none}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stack>*+*{margin-top:10px}
+  .privacy{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:12px}
+  .privacy svg{flex:none;margin-top:2px}
+  .notice{font-size:13px;color:var(--warn);background:var(--warn-50);border:1px solid var(--warn-line);border-radius:12px;padding:10px 12px}
+  .err{color:#a32d2d}
+  #status{font-size:14px;color:var(--muted);text-align:center;min-height:1.5em;margin-top:10px}
+  .spinner{width:40px;height:40px;border-radius:50%;border:4px solid var(--brand-50);border-top-color:var(--brand);margin:24px auto 12px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .photo{position:relative;border-radius:var(--radius);overflow:hidden;background:#dfe3e8}
+  canvas{display:block;width:100%;height:auto}
+  .toggle{position:absolute;right:10px;bottom:10px;background:rgba(23,32,46,.72);color:#fff;border:0;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+  .sum{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:baseline;font-size:15px}
+  .sum dt{color:var(--muted);font-size:14px}
+  .sum dd{margin:0}
+  .chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:14px;margin:0 4px 4px 0}
+  .chip small{opacity:.8;font-size:12px}
+  .chip.chat{background:var(--chat-50);color:var(--chat)} .chip.hinh{background:var(--hinh-50);color:var(--hinh)} .chip.reu{background:var(--reu-50);color:var(--reu)}
+  .none{color:var(--faint);font-size:14px}
+  .feat{border-left:4px solid var(--line);padding:2px 0 2px 12px;margin:14px 0}
+  .feat.chat{border-color:var(--chat)} .feat.hinh{border-color:var(--hinh)} .feat.reu{border-color:var(--reu)}
+  .feat h3{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:16px;margin:0 0 4px}
+  .lvl{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--muted);white-space:nowrap}
+  .lvl.hi{background:var(--brand-50);color:var(--brand)}
+  .feat p{font-size:14px;color:var(--muted);margin:0 0 4px}
+  .feat .note{color:var(--warn)}
+  .feat .weak{font-size:12px;color:var(--faint)}
+  .muted{color:var(--muted);font-size:14px}
+  label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input.f,textarea.f{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  textarea.f{min-height:70px;resize:vertical}
+  .toast{position:sticky;bottom:12px;margin-top:12px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 14px;font-size:14px}
+  footer{font-size:12px;color:var(--faint);margin-top:24px;text-align:center}
+  footer a{color:var(--faint)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M7 4h10v7a5 5 0 0 1-10 0z"/><path d="M12 9v5"/></svg></i>Thiệt chẩn AI</div>
+    <span class="pill">Bản thử nghiệm</span>
+  </header>
+
+  <!-- ===== Bước 1: Chụp ===== -->
+  <section id="s-start">
+    <div class="steps" aria-hidden="true"><span class="on">1. Chụp ảnh</span><span>2. AI mô tả</span><span>3. Gửi bác sĩ</span></div>
+    <h1>Chụp ảnh lưỡi, AI mô tả bằng tiếng Việt</h1>
+    <p class="lead">AI chỉ ghi nhận những gì nhìn thấy trên ảnh. Bác sĩ sẽ xem ảnh và đưa ra nhận xét cuối cùng.</p>
+
+    <div class="card">
+      <h2>Chụp thế nào cho chuẩn</h2>
+      <div class="tips">
+        <div class="tip"><svg viewBox="0 0 32 32" fill="none" stroke="#ba7517" stroke-width="2" stroke-linecap="round"><circle cx="16" cy="16" r="6"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M6.8 25.2l2.8-2.8M22.4 9.6l2.8-2.8"/></svg><span>Ánh sáng ban ngày, gần cửa sổ</span></div>
+        <div class="tip"><svg viewBox="0 0 32 32" fill="none" stroke="#c4472a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4 9 18h7l-1 10 8-14h-7z"/><path d="M5 5l22 22"/></svg><span>Tắt đèn flash, không dùng đèn vàng</span></div>
+        <div class="tip"><svg viewBox="0 0 32 32" fill="none" stroke="#0f6e56" stroke-width="2" stroke-linecap="round"><ellipse cx="16" cy="12" rx="10" ry="6"/><path d="M10 13c0 9 3 15 6 15s6-6 6-15"/><path d="M16 17v6"/></svg><span>Lè hết lưỡi, thả lỏng, chụp thẳng</span></div>
+        <div class="tip"><svg viewBox="0 0 32 32" fill="none" stroke="#5b52c4" stroke-width="2" stroke-linecap="round"><path d="M7 11h15v8a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6z"/><path d="M22 13h2a3 3 0 0 1 0 6h-2"/><path d="M5 5l22 22"/></svg><span>Không ăn uống đồ có màu 30 phút trước</span></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <label class="btn primary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Chụp ảnh lưỡi<input id="cam" type="file" accept="image/*" capture="environment"></label>
+      <label class="btn ghost">Chọn ảnh có sẵn<input id="pick" type="file" accept="image/*"></label>
+    </div>
+    <div class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <span>Ảnh được phân tích ngay trên điện thoại của bạn, không tải lên máy chủ nào. Chỉ khi bạn bấm “Gửi cho bác sĩ”, ảnh mới được gửi qua ứng dụng bạn chọn.</span></div>
+    <div id="status">Đang tải mô hình…</div>
+  </section>
+
+  <!-- ===== Đang phân tích ===== -->
+  <section id="s-busy" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="muted" style="text-align:center">Đang phân tích ảnh trên máy của bạn…</p>
+  </section>
+
+  <!-- ===== Không thấy lưỡi ===== -->
+  <section id="s-nolip" hidden>
+    <div class="card">
+      <h2>Chưa thấy rõ lưỡi trong ảnh</h2>
+      <p class="muted">AI không nhận ra lưỡi. Hãy há miệng, lè hết lưỡi ra ngoài và chụp lại gần hơn, đủ sáng.</p>
+      <button class="btn primary" data-retake>Chụp lại</button>
+    </div>
+  </section>
+
+  <!-- ===== Bước 2: Kết quả ===== -->
+  <section id="s-result" hidden>
+    <div class="steps" aria-hidden="true"><span class="on">1. Chụp ảnh</span><span class="on">2. AI mô tả</span><span>3. Gửi bác sĩ</span></div>
+    <div id="quality" class="notice" hidden></div>
+
+    <div class="photo card" style="padding:0">
+      <canvas id="cv"></canvas>
+      <button class="toggle" id="boxBtn">Ẩn khung</button>
+    </div>
+
+    <div class="card">
+      <h2>Tóm tắt</h2>
+      <dl class="sum" id="summary"></dl>
+    </div>
+
+    <div class="card" id="detailCard">
+      <h2>Chi tiết từng đặc điểm</h2>
+      <div id="details"></div>
+    </div>
+
+    <div class="card">
+      <h2>AI chưa đánh giá được</h2>
+      <p class="muted">Với các đặc điểm sau, AI hiện còn nhầm nhiều nên không đưa ra nhận định. Bác sĩ sẽ xem trực tiếp trên ảnh:</p>
+      <p id="weakList" style="margin:0"></p>
+    </div>
+
+    <!-- ===== Bước 3: Gửi bác sĩ ===== -->
+    <div class="card">
+      <h2>Gửi cho bác sĩ xem</h2>
+      <p class="muted">Bác sĩ sẽ đọc ảnh, đối chiếu với mô tả của AI và trả lời bạn. Các ô dưới đây không bắt buộc.</p>
+      <label class="f" for="pName">Họ tên</label><input class="f" id="pName" autocomplete="name">
+      <label class="f" for="pYear">Năm sinh</label><input class="f" id="pYear" inputmode="numeric" maxlength="4">
+      <label class="f" for="pNote">Bạn muốn hỏi bác sĩ điều gì?</label><textarea class="f" id="pNote" placeholder="Ví dụ: hay mệt, ăn kém, khó ngủ…"></textarea>
+      <div class="stack" style="margin-top:14px">
+        <button class="btn primary" id="sendBtn">Gửi ảnh và mô tả cho bác sĩ</button>
+        <button class="btn ghost" id="copyBtn">Sao chép bản mô tả</button>
+        <button class="btn plain" data-retake>Chụp ảnh khác</button>
+      </div>
+      <p class="muted" style="font-size:12px;margin-top:10px" id="sendHint"></p>
+    </div>
+
+    <p class="notice">Đây là mô tả hình ảnh tự động, không phải chẩn đoán. Kết quả phụ thuộc nhiều vào ánh sáng và cách chụp. Nếu có triệu chứng cấp tính hoặc khó chịu nhiều, hãy đi khám trực tiếp.</p>
+    <div class="toast" id="toast" hidden></div>
+  </section>
+
+  <footer>
+    <span id="foot"></span><br>
+    Mô hình học từ bộ dữ liệu công khai TCM-Tongue (<a href="https://datadryad.org/dataset/doi:10.5061/dryad.1c59zw48r" target="_blank" rel="noopener">Dryad, CC0</a>), ảnh chụp tại Trung Quốc, chưa kiểm chứng trên người Việt Nam.
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script>
+// ======================= CẤU HÌNH (sửa ở đây) =======================
+const CONFIG = {
+  doctor: 'ThS.BS Lê Trung Kiên',
+  zalo: '0345901772',              // số Zalo nhận báo cáo; để '' nếu không muốn hiện
+  site: 'https://bacsikien.com',
+  model: 'model.onnx',
+  modelVersion: 'v1 (17/11/2026)',
+};
+
+// ===== CORE-START (các hàm thuần, kiểm thử được ngoài trình duyệt) =====
+const SIZE = 640, FLOOR = 0.20, IOU = 0.45, NO_TONGUE = 0.25;
+const GROUP = { chat: 'Chất lưỡi', hinh: 'Hình thể', reu: 'Rêu lưỡi' };
+
+// Đặc điểm được hiển thị. lo/hi: ngưỡng "có thể"/"rõ".
+// tier A: AP50 trên tập kiểm tra ≥ 0,6. tier B: 0,3–0,6, kèm lưu ý AI còn hay nhầm.
+const FEATURES = {
+  9:  { tier:'A', group:'reu',  name:'Rêu trắng', lo:.40, hi:.70,
+        desc:'Lớp rêu phủ trên mặt lưỡi có màu trắng. Rêu trắng mỏng cũng thường thấy ở người khỏe mạnh.' },
+  10: { tier:'A', group:'reu',  name:'Rêu vàng', lo:.40, hi:.65,
+        desc:'Lớp rêu trên mặt lưỡi ngả màu vàng.',
+        note:'Cà phê, trà, nghệ, thuốc lá, kẹo màu có thể nhuộm vàng rêu lưỡi.' },
+  2:  { tier:'A', group:'chat', name:'Lưỡi đỏ', lo:.30, hi:.55,
+        desc:'Phần thịt lưỡi bên dưới lớp rêu có màu đỏ hơn màu hồng nhạt thường gặp.',
+        note:'Đèn vàng, đèn flash, vừa ăn đồ nóng hoặc cay có thể làm lưỡi trông đỏ hơn.' },
+  5:  { tier:'A', group:'hinh', name:'Lưỡi gầy mỏng', lo:.40, hi:.65,
+        desc:'Thân lưỡi nhỏ và mỏng hơn bình thường.',
+        note:'Lè lưỡi chưa hết hoặc chụp quá xa có thể làm lưỡi trông nhỏ hơn.' },
+  1:  { tier:'B', group:'reu',  name:'Rêu bong', lo:.45, hi:.70,
+        desc:'Có mảng rêu bị bong mất, để lộ mặt lưỡi nhẵn với ranh giới rõ (còn gọi là lưỡi bản đồ).' },
+  11: { tier:'B', group:'reu',  name:'Rêu đen', lo:.45, hi:.70,
+        desc:'Rêu lưỡi sẫm màu, xám hoặc đen.',
+        note:'Cà phê, thuốc lá và một số loại thuốc có thể làm rêu sẫm màu.' },
+  4:  { tier:'B', group:'hinh', name:'Lưỡi bệu', lo:.35, hi:.60,
+        desc:'Thân lưỡi to và dày, có thể chiếm gần hết khoang miệng.' },
+};
+// Đặc điểm AI chưa đủ tin cậy (AP50 < 0,3): không nhận định, chỉ liệt kê để bác sĩ xem
+const WEAK = ['Vết nứt', 'Hằn răng', 'Lưỡi tím', 'Điểm đỏ', 'Rêu trơn ướt'];
+
+// Đầu ra YOLO11: mảng phẳng [1, 4 + số nhãn, số ô neo]; mỗi ô neo: cx, cy, w, h rồi điểm từng nhãn.
+function decode(data, dims, floor) {
+  const C = dims[1], N = dims[2], nc = C - 4, out = [];
+  let top = 0;
+  for (let i = 0; i < N; i++) {
+    for (let c = 0; c < nc; c++) {
+      const s = data[(4 + c) * N + i];
+      if (s > top) top = s;
+      if (s < floor) continue;
+      const cx = data[i], cy = data[N + i], w = data[2 * N + i], h = data[3 * N + i];
+      out.push({ cls: c, score: s, x1: cx - w / 2, y1: cy - h / 2, x2: cx + w / 2, y2: cy + h / 2 });
+    }
+  }
+  return { boxes: out, top };
+}
+
+function iou(a, b) {
+  const x1 = Math.max(a.x1, b.x1), y1 = Math.max(a.y1, b.y1), x2 = Math.min(a.x2, b.x2), y2 = Math.min(a.y2, b.y2);
+  const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const u = (a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter;
+  return u > 0 ? inter / u : 0;
+}
+
+function nms(boxes, thr) {
+  const keep = [];
+  boxes.slice().sort((a, b) => b.score - a.score).forEach(b => {
+    if (!keep.some(k => k.cls === b.cls && iou(k, b) > thr)) keep.push(b);
+  });
+  return keep;
+}
+
+// Từ các khung đã lọc → danh sách đặc điểm để hiển thị (mỗi nhãn một dòng, điểm cao nhất)
+function interpret(boxes) {
+  const best = new Map();
+  boxes.forEach(b => {
+    const f = FEATURES[b.cls];
+    if (!f || b.score < f.lo) return;
+    if (!best.has(b.cls) || best.get(b.cls).score < b.score) best.set(b.cls, b);
+  });
+  return [...best.values()].map(b => {
+    const f = FEATURES[b.cls];
+    return { cls: b.cls, score: b.score, box: b, ...f, level: b.score >= f.hi ? 'rõ' : 'có thể' };
+  }).sort((a, b) => (a.tier > b.tier) - (a.tier < b.tier) || b.score - a.score);
+}
+
+function buildReport(findings, quality, patient, when, version) {
+  const L = [];
+  L.push('BÁO CÁO HÌNH ẢNH LƯỠI (AI mô tả, chờ bác sĩ xác nhận)');
+  if (patient.name) L.push('Họ tên: ' + patient.name);
+  if (patient.year) L.push('Năm sinh: ' + patient.year);
+  L.push('Thời gian: ' + when);
+  L.push('Chất lượng ảnh: ' + (quality.length ? quality.join('; ') : 'đạt'));
+  L.push('');
+  L.push('Đặc điểm AI nhận thấy:');
+  if (findings.length) findings.forEach(f =>
+    L.push(`- ${f.name}: ${f.level} (điểm ${f.score.toFixed(2).replace('.', ',')})${f.tier === 'B' ? ' – AI còn hay nhầm' : ''}`));
+  else L.push('- Không có đặc điểm nào đủ rõ để nhận định');
+  L.push('AI không đánh giá: ' + WEAK.join(', ').toLowerCase());
+  if (patient.note) { L.push(''); L.push('Câu hỏi của người bệnh: ' + patient.note); }
+  L.push('');
+  L.push('Mô hình ' + version + ', học từ bộ TCM-Tongue. Đây không phải chẩn đoán.');
+  return L.join('\n');
+}
+// ===== CORE-END =====
+
+if (typeof window !== 'undefined') {
+  const $ = id => document.getElementById(id);
+  const show = id => ['s-start', 's-busy', 's-nolip', 's-result'].forEach(s => $(s).hidden = s !== id);
+  const status = (t, err) => { $('status').textContent = t; $('status').className = err ? 'err' : ''; };
+  const toast = t => { const e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(e._t); e._t = setTimeout(() => e.hidden = true, 4500); };
+  let session = null, state = null, showBoxes = true;
+
+  $('foot').innerHTML = `Công cụ thử nghiệm của ${CONFIG.doctor}` + (CONFIG.site ? ` · <a href="${CONFIG.site}" target="_blank" rel="noopener">${CONFIG.site.replace(/^https?:\/\//, '')}</a>` : '');
+  $('weakList').innerHTML = WEAK.map(w => `<span class="chip" style="background:var(--bg);color:var(--muted)">${w}</span>`).join('');
+  $('sendHint').textContent = 'Khi bấm gửi, điện thoại sẽ hỏi bạn chọn ứng dụng (ví dụ Zalo). Ảnh chỉ được gửi tới người bạn chọn.'
+    + (CONFIG.zalo ? ` Zalo bác sĩ: ${CONFIG.zalo}.` : '');
+
+  if (typeof ort === 'undefined') {
+    status('Không tải được thư viện xử lý ảnh. Kiểm tra kết nối mạng rồi tải lại trang.', true);
+  } else {
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+    ort.InferenceSession.create(CONFIG.model, { executionProviders: ['wasm'] })
+      .then(s => { session = s; status('Sẵn sàng.'); })
+      .catch(e => { console.error(e); status('Không tải được mô hình. Hãy tải lại trang; nếu vẫn lỗi, báo cho bác sĩ.', true); });
+  }
+
+  function letterbox(img) {
+    const scale = Math.min(SIZE / img.width, SIZE / img.height);
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const padX = (SIZE - w) / 2, padY = (SIZE - h) / 2;
+    const c = document.createElement('canvas'); c.width = c.height = SIZE;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgb(114,114,114)'; g.fillRect(0, 0, SIZE, SIZE);
+    g.drawImage(img, padX, padY, w, h);
+    const px = g.getImageData(0, 0, SIZE, SIZE).data, area = SIZE * SIZE, t = new Float32Array(3 * area);
+    for (let i = 0; i < area; i++) { t[i] = px[i*4] / 255; t[area+i] = px[i*4+1] / 255; t[2*area+i] = px[i*4+2] / 255; }
+    return { tensor: new ort.Tensor('float32', t, [1, 3, SIZE, SIZE]), scale, padX, padY };
+  }
+
+  function checkQuality(img) {
+    const notes = [];
+    if (Math.min(img.width, img.height) < 300) notes.push('ảnh có độ phân giải thấp');
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 64);
+    const d = g.getImageData(0, 0, 64, 64).data; let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    const mean = sum / (d.length / 4);
+    if (mean < 60) notes.push('ảnh khá tối');
+    if (mean > 210) notes.push('ảnh quá sáng hoặc bị chói');
+    return notes;
+  }
+
+  // Thu nhỏ ảnh gốc (cạnh dài tối đa 1600px) để vẽ và gửi
+  function normalize(img) {
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  function draw() {
+    const { photo, findings } = state, cv = $('cv'), ctx = cv.getContext('2d');
+    cv.width = photo.width; cv.height = photo.height; ctx.drawImage(photo, 0, 0);
+    $('boxBtn').textContent = showBoxes ? 'Ẩn khung' : 'Hiện khung';
+    $('boxBtn').hidden = !findings.length;
+    if (!showBoxes) return;
+    const css = getComputedStyle(document.documentElement);
+    const fs = Math.max(16, photo.width / 32), lh = fs + 10, lw = Math.max(3, photo.width / 250), placed = [];
+    ctx.font = `600 ${fs}px system-ui, sans-serif`; ctx.lineWidth = lw;
+    findings.forEach(f => {
+      const b = f.box, col = css.getPropertyValue('--' + f.group).trim();
+      ctx.strokeStyle = col; ctx.setLineDash(f.level === 'rõ' ? [] : [lw * 3, lw * 2]);
+      ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1); ctx.setLineDash([]);
+      const tw = ctx.measureText(f.name).width + 14;
+      let x = Math.min(Math.max(0, b.x1), photo.width - tw), top = Math.max(0, b.y1 - lh);
+      while (placed.some(r => x < r.x + r.w && r.x < x + tw && top < r.y + lh && r.y < top + lh)) top += lh;
+      placed.push({ x, y: top, w: tw });
+      ctx.fillStyle = col; ctx.fillRect(x, top, tw, lh);
+      ctx.fillStyle = '#fff'; ctx.fillText(f.name, x + 7, top + lh - 8);
+    });
+  }
+
+  function render() {
+    const { findings, quality } = state;
+    $('quality').hidden = !quality.length;
+    $('quality').textContent = quality.length ? 'Lưu ý về ảnh: ' + quality.join(', ') + '. Kết quả có thể kém chính xác, nên chụp lại nếu được.' : '';
+    $('summary').innerHTML = Object.entries(GROUP).map(([g, label]) => {
+      const fs = findings.filter(f => f.group === g);
+      return `<dt>${label}</dt><dd>${fs.length ? fs.map(f => `<span class="chip ${g}">${f.name} <small>· ${f.level}</small></span>`).join('')
+        : '<span class="none">AI không đưa ra nhận định</span>'}</dd>`;
+    }).join('');
+    $('detailCard').hidden = !findings.length;
+    $('details').innerHTML = findings.map(f => `
+      <div class="feat ${f.group}">
+        <h3>${f.name}<span class="lvl ${f.level === 'rõ' ? 'hi' : ''}">${f.level === 'rõ' ? 'Thấy rõ' : 'Có thể có'}</span></h3>
+        <p>${f.desc}</p>
+        ${f.note ? `<p class="note">Lưu ý: ${f.note}</p>` : ''}
+        ${f.tier === 'B' ? '<p class="weak">Với đặc điểm này AI còn hay nhầm, cần bác sĩ xác nhận.</p>' : ''}
+      </div>`).join('');
+    draw();
+  }
+
+  async function analyze(file) {
+    if (!file) return;
+    if (!session) { status('Mô hình chưa tải xong, vui lòng đợi vài giây.', true); return; }
+    show('s-busy');
+    try {
+      const img = new Image(); img.src = URL.createObjectURL(file); await img.decode();
+      const photo = normalize(img);
+      const { tensor, scale, padX, padY } = letterbox(photo);
+      const out = await session.run({ [session.inputNames[0]]: tensor });
+      const o = out[session.outputNames[0]];
+      const { boxes, top } = decode(o.data, o.dims, FLOOR);
+      if (top < NO_TONGUE) { show('s-nolip'); return; }
+      const mapped = nms(boxes, IOU).map(b => ({ ...b,
+        x1: Math.max(0, (b.x1 - padX) / scale), y1: Math.max(0, (b.y1 - padY) / scale),
+        x2: Math.min(photo.width, (b.x2 - padX) / scale), y2: Math.min(photo.height, (b.y2 - padY) / scale) }));
+      state = { photo, findings: interpret(mapped), quality: checkQuality(photo), when: new Date() };
+      showBoxes = true; render(); show('s-result'); window.scrollTo(0, 0);
+    } catch (e) {
+      console.error(e); show('s-start'); status('Có lỗi khi phân tích ảnh. Hãy thử ảnh khác.', true);
+    }
+  }
+
+  function report() {
+    const p = { name: $('pName').value.trim(), year: $('pYear').value.trim(), note: $('pNote').value.trim() };
+    const when = state.when.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+    return buildReport(state.findings, state.quality, p, when, CONFIG.modelVersion);
+  }
+
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); return true; }
+    catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select();
+            const ok = document.execCommand('copy'); a.remove(); return ok; }
+  }
+
+  async function send() {
+    const text = report(); await copyText(text);
+    const blob = await new Promise(r => state.photo.toBlob(r, 'image/jpeg', 0.9));
+    const file = new File([blob], 'anh-luoi.jpg', { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text, title: 'Báo cáo hình ảnh lưỡi' });
+        toast('Bản mô tả cũng đã được sao chép. Nếu ứng dụng chỉ gửi ảnh, hãy dán thêm vào tin nhắn.');
+      } catch (e) { if (e.name !== 'AbortError') toast('Không gửi được. Hãy dùng nút "Sao chép bản mô tả".'); }
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'anh-luoi.jpg'; a.click();
+      toast('Đã lưu ảnh và sao chép bản mô tả. Hãy gửi ảnh và dán bản mô tả cho bác sĩ' + (CONFIG.zalo ? ' qua Zalo.' : '.'));
+      if (CONFIG.zalo) setTimeout(() => window.open('https://zalo.me/' + CONFIG.zalo, '_blank', 'noopener'), 800);
+    }
+  }
+
+  const onFile = e => { analyze(e.target.files[0]); e.target.value = ''; };
+  $('cam').addEventListener('change', onFile);
+  $('pick').addEventListener('change', onFile);
+  $('boxBtn').addEventListener('click', () => { showBoxes = !showBoxes; draw(); });
+  $('sendBtn').addEventListener('click', () => send().catch(console.error));
+  $('copyBtn').addEventListener('click', async () => toast(await copyText(report()) ? 'Đã sao chép bản mô tả.' : 'Không sao chép được.'));
+  document.querySelectorAll('[data-retake]').forEach(b => b.addEventListener('click', () => { show('s-start'); window.scrollTo(0, 0); }));
+}
+</script>
+</body>
+</html>
